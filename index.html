@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="th" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Toy Racing Pro - Ultra Glassmorphism Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            glassDark: 'rgba(15, 23, 42, 0.75)',
+            glassLight: 'rgba(255, 255, 255, 0.75)',
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    * { font-family: 'Prompt', sans-serif; transition: background-color 0.3s, border-color 0.3s; }
+    
+    /* Dark Theme Background */
+    html.dark body {
+      background: #080c14;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.18) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(239, 68, 68, 0.15) 0px, transparent 50%),
+        radial-gradient(at 50% 100%, rgba(16, 185, 129, 0.12) 0px, transparent 50%);
+      background-attachment: fixed;
+      color: #f1f5f9;
+    }
+
+    /* Light Theme Background */
+    html.light body {
+      background: #f8fafc;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.12) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(239, 68, 68, 0.1) 0px, transparent 50%),
+        radial-gradient(at 50% 100%, rgba(16, 185, 129, 0.1) 0px, transparent 50%);
+      background-attachment: fixed;
+      color: #0f172a;
+    }
+
+    /* Glass Cards Dynamic Styling */
+    .glass-card {
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+    html.dark .glass-card {
+      background: rgba(15, 23, 42, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+    html.light .glass-card {
+      background: rgba(255, 255, 255, 0.75);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+    }
+
+    .glass-nav {
+      backdrop-filter: blur(24px);
+    }
+    html.dark .glass-nav {
+      background: rgba(15, 23, 42, 0.85);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    html.light .glass-nav {
+      background: rgba(255, 255, 255, 0.85);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .glass-input {
+      backdrop-filter: blur(10px);
+    }
+    html.dark .glass-input {
+      background: rgba(2, 6, 23, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #f8fafc;
+    }
+    html.light .glass-input {
+      background: rgba(241, 245, 249, 0.8);
+      border: 1px solid rgba(0, 0, 0, 0.15);
+      color: #0f172a;
+    }
+
+    .tab-page {
+      display: none;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .tab-page.active {
+      display: block;
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body class="min-h-screen pb-20 md:pb-10">
+
+  <!-- TOP HEADER -->
+  <header class="glass-nav sticky top-0 z-40 px-4 py-3">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-3">
+      
+      <!-- LOGO & TITLE -->
+      <div class="flex items-center space-x-3 w-full md:w-auto justify-between md:justify-start">
+        <div class="flex items-center space-x-3">
+          <div class="bg-gradient-to-tr from-green-500 to-emerald-700 p-2.5 rounded-2xl text-white shadow-lg shadow-green-500/20">
+            <i class="fa-solid fa-flag-checkered text-xl"></i>
+          </div>
+          <div>
+            <h1 class="font-black text-xl tracking-wider dark:text-white text-slate-800">TOY RACING</h1>
+            <p class="text-[11px] dark:text-slate-400 text-slate-500">ระบบบันทึกการลงสต๊อกสินค้า • Realtime Glass UI</p>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-2 md:hidden">
+          <!-- Theme Toggle Mobile -->
+          <button onclick="toggleTheme()" class="glass-card p-2 rounded-xl text-amber-400">
+            <i class="fa-solid fa-sun dark:hidden"></i>
+            <i class="fa-solid fa-moon hidden dark:inline"></i>
+          </button>
+          <!-- Refresh Mobile -->
+          <button onclick="loadData()" class="glass-card p-2 rounded-xl text-slate-400">
+            <i class="fa-solid fa-rotate" id="refresh-icon-mob"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- MAIN TABS NAVIGATION -->
+      <nav class="flex space-x-1.5 dark:bg-slate-900/80 bg-slate-200/80 p-1.5 rounded-2xl border border-white/5 text-xs overflow-x-auto w-full md:w-auto">
+        <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn px-3.5 py-2 rounded-xl font-semibold transition bg-blue-600 text-white shadow-lg shadow-blue-600/30 whitespace-nowrap">
+          <i class="fa-solid fa-chart-pie mr-1"></i> Dashboard
+        </button>
+        <button onclick="switchTab('stocklog')" id="nav-stocklog" class="nav-btn px-3.5 py-2 rounded-xl dark:text-slate-400 text-slate-600 hover:text-blue-500 transition whitespace-nowrap">
+          <i class="fa-solid fa-list-check mr-1"></i> Stock Log
+        </button>
+        <button onclick="switchTab('products')" id="nav-products" class="nav-btn px-3.5 py-2 rounded-xl dark:text-slate-400 text-slate-600 hover:text-blue-500 transition whitespace-nowrap">
+          <i class="fa-solid fa-boxes-stacked mr-1"></i> สินค้าทั้งหมด
+        </button>
+        <button onclick="switchTab('reports')" id="nav-reports" class="nav-btn px-3.5 py-2 rounded-xl dark:text-slate-400 text-slate-600 hover:text-blue-500 transition whitespace-nowrap">
+          <i class="fa-solid fa-sliders mr-1"></i> ตั้งค่า & รายงาน
+        </button>
+      </nav>
+
+      <!-- CONTROLS RIGHT -->
+      <div class="hidden md:flex items-center space-x-2">
+        <!-- Theme Toggle Desktop -->
+        <button onclick="toggleTheme()" class="glass-card hover:bg-white/10 px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center space-x-2 transition border border-white/10">
+          <i class="fa-solid fa-sun text-amber-500 dark:hidden"></i>
+          <i class="fa-solid fa-moon text-blue-400 hidden dark:inline"></i>
+          <span id="theme-text">โหมดสว่าง</span>
+        </button>
+
+        <button onclick="loadData()" class="glass-card hover:bg-white/10 dark:text-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center space-x-2 transition border border-white/10">
+          <i class="fa-solid fa-rotate" id="refresh-icon"></i>
+          <span>อัปเดตข้อมูล</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-7xl mx-auto px-4 py-5 space-y-5">
+
+    <!-- ================= PAGE 1: DASHBOARD ================= -->
+    <div id="page-dashboard" class="tab-page active space-y-5">
+
+      <!-- QUICK ACTION BUTTONS -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <button onclick="openForm('รับเข้า')" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3 px-4 rounded-2xl flex items-center justify-center space-x-2 shadow-lg shadow-emerald-900/20 transition transform hover:-translate-y-0.5 text-xs md:text-sm">
+          <i class="fa-solid fa-square-plus text-base"></i><span>รับสินค้าเข้า</span>
+        </button>
+        <button onclick="openForm('จ่ายออก')" class="bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-bold py-3 px-4 rounded-2xl flex items-center justify-center space-x-2 shadow-lg shadow-rose-900/20 transition transform hover:-translate-y-0.5 text-xs md:text-sm">
+          <i class="fa-solid fa-square-minus text-base"></i><span>จ่ายสินค้าออก</span>
+        </button>
+        <button onclick="openAddModal()" class="glass-card hover:bg-white/10 text-amber-500 dark:text-amber-300 font-bold py-3 px-4 rounded-2xl flex items-center justify-center space-x-2 border border-amber-500/30 transition text-xs md:text-sm">
+          <i class="fa-solid fa-plus text-base"></i><span>เพิ่มสินค้าใหม่</span>
+        </button>
+        <button onclick="window.print()" class="glass-card hover:bg-white/10 text-blue-500 dark:text-blue-300 font-bold py-3 px-4 rounded-2xl flex items-center justify-center space-x-2 border border-blue-500/30 transition text-xs md:text-sm">
+          <i class="fa-solid fa-print text-base"></i><span>พิมพ์รายงาน</span>
+        </button>
+      </div>
+
+      <!-- 5 KPI CARDS -->
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div class="glass-card p-4 rounded-2xl relative overflow-hidden">
+          <p class="text-[11px] dark:text-slate-400 text-slate-500">📥 รับเข้าทั้งหมด</p>
+          <h3 id="kpi-in" class="text-2xl font-black text-blue-500 dark:text-blue-400 mt-1">0</h3>
+          <span class="text-[10px] text-emerald-500">หน่วย: ชิ้น</span>
+        </div>
+        <div class="glass-card p-4 rounded-2xl relative overflow-hidden">
+          <p class="text-[11px] dark:text-slate-400 text-slate-500">📤 จ่ายออกทั้งหมด</p>
+          <h3 id="kpi-out" class="text-2xl font-black text-rose-500 dark:text-rose-400 mt-1">0</h3>
+          <span class="text-[10px] text-rose-500">หน่วย: ชิ้น</span>
+        </div>
+        <div class="glass-card p-4 rounded-2xl relative overflow-hidden">
+          <p class="text-[11px] dark:text-slate-400 text-slate-500">📦 คงเหลือรวม</p>
+          <h3 id="kpi-remaining" class="text-2xl font-black text-amber-500 dark:text-amber-400 mt-1">0</h3>
+          <span id="kpi-low-text" class="text-[10px] text-amber-600 dark:text-amber-300">เตือน: 0 รายการ</span>
+        </div>
+        <div class="glass-card p-4 rounded-2xl relative overflow-hidden">
+          <p class="text-[11px] dark:text-slate-400 text-slate-500">🛍️ สินค้าทั้งหมด</p>
+          <h3 id="kpi-items" class="text-2xl font-black text-purple-500 dark:text-purple-400 mt-1">0</h3>
+          <span class="text-[10px] dark:text-slate-500 text-slate-400">รายการ SKU</span>
+        </div>
+        <div class="glass-card p-4 rounded-2xl relative overflow-hidden col-span-2 md:col-span-1">
+          <p class="text-[11px] dark:text-slate-400 text-slate-500">💰 มูลค่าคงเหลือ</p>
+          <h3 id="kpi-value" class="text-xl font-black text-emerald-500 dark:text-emerald-400 mt-1">฿0</h3>
+          <span class="text-[10px] dark:text-slate-500 text-slate-400">ราคาทุนรวม</span>
+        </div>
+      </div>
+
+      <!-- MAIN DATA GRID -->
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-5">
+        
+        <!-- LEFT 3 COLUMNS -->
+        <div class="lg:col-span-3 space-y-5">
+          
+          <!-- SUMMARY TABLE -->
+          <div class="glass-card p-4 rounded-3xl space-y-3">
+            <h3 class="font-bold text-sm dark:text-slate-200 text-slate-700 flex items-center gap-2">
+              <i class="fa-solid fa-list text-blue-500"></i> สรุปสต๊อกคงเหลือแยกรายการ
+            </h3>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="dark:bg-slate-900/80 bg-slate-100 text-slate-400 border-b border-white/10">
+                  <tr>
+                    <th class="py-2.5 px-3">#</th>
+                    <th class="py-2.5 px-3">รหัสสินค้า</th>
+                    <th class="py-2.5 px-3">ชื่อรุ่น</th>
+                    <th class="py-2.5 px-3 text-center">รับเข้า</th>
+                    <th class="py-2.5 px-3 text-center">จ่ายออก</th>
+                    <th class="py-2.5 px-3 text-center">คงเหลือ</th>
+                    <th class="py-2.5 px-3 text-center">สถานะ</th>
+                  </tr>
+                </thead>
+                <tbody id="dash-summary-tbody" class="divide-y dark:divide-white/5 divide-slate-200"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- RECENT TRANSACTIONS TABLE -->
+          <div class="glass-card p-4 rounded-3xl space-y-3">
+            <h3 class="font-bold text-sm dark:text-slate-200 text-slate-700 flex items-center gap-2">
+              <i class="fa-solid fa-clock-rotate-left text-emerald-500"></i> รายการเคลื่อนไหวล่าสุด
+            </h3>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="dark:bg-slate-900/80 bg-slate-100 text-slate-400 border-b border-white/10">
+                  <tr>
+                    <th class="py-2.5 px-3">วันที่</th>
+                    <th class="py-2.5 px-3 text-center">ประเภท</th>
+                    <th class="py-2.5 px-3">รหัสสินค้า</th>
+                    <th class="py-2.5 px-3">หมายเหตุ</th>
+                    <th class="py-2.5 px-3 text-right">จำนวน</th>
+                    <th class="py-2.5 px-3 text-center">ผู้บันทึก</th>
+                  </tr>
+                </thead>
+                <tbody id="dash-recent-tbody" class="divide-y dark:divide-white/5 divide-slate-200"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- BOTTOM WIDGETS (Top Selling & Monthly Charts) -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="glass-card p-4 rounded-3xl space-y-3">
+              <h4 class="font-bold text-xs dark:text-slate-200 text-slate-700">🔥 สินค้าขายดี (จ่ายออกสูงสุด)</h4>
+              <div id="top-selling-list" class="space-y-2 text-xs"></div>
+            </div>
+
+            <div class="glass-card p-4 rounded-3xl space-y-2">
+              <h4 class="font-bold text-xs text-emerald-500">📈 กราฟรับเข้า รายเดือน</h4>
+              <canvas id="monthlyInChart" class="max-h-36"></canvas>
+            </div>
+
+            <div class="glass-card p-4 rounded-3xl space-y-2">
+              <h4 class="font-bold text-xs text-rose-500">📉 กราฟจ่ายออก รายเดือน</h4>
+              <canvas id="monthlyOutChart" class="max-h-36"></canvas>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- RIGHT SIDEBAR -->
+        <div class="space-y-5">
+          <!-- WIDGET 1: LOW STOCK ALERT -->
+          <div class="glass-card p-4 rounded-3xl border border-rose-500/30 dark:bg-rose-950/20 bg-rose-50/50 space-y-3">
+            <h3 class="font-bold text-xs text-rose-500 flex items-center gap-1.5">
+              <i class="fa-solid fa-bell animate-bounce"></i> แจ้งเตือนสินค้าใกล้หมด
+            </h3>
+            <div id="low-stock-sidebar" class="space-y-2 text-xs max-h-48 overflow-y-auto"></div>
+          </div>
+
+          <!-- WIDGET 2: DOUGHNUT CHART -->
+          <div class="glass-card p-4 rounded-3xl space-y-3">
+            <h3 class="font-bold text-xs dark:text-slate-200 text-slate-700">📊 สัดส่วน รับเข้า - จ่ายออก - คงเหลือ</h3>
+            <div class="relative flex justify-center py-2">
+              <canvas id="ratioChart" class="max-h-48"></canvas>
+            </div>
+          </div>
+
+          <!-- WIDGET 3: QUICK SEARCH -->
+          <div class="glass-card p-4 rounded-3xl space-y-3">
+            <h3 class="font-bold text-xs dark:text-slate-200 text-slate-700">🔍 ค้นหาสินค้าด่วน</h3>
+            <select id="quickSearchSelect" onchange="showQuickSearchDetail(this.value)" class="glass-input w-full rounded-xl px-3 py-2 text-xs outline-none"></select>
+            <div id="quickSearchBox" class="dark:bg-slate-900/60 bg-slate-100 p-3 rounded-2xl text-xs space-y-1.5 border border-white/5">
+              <p class="text-slate-400">เลือกรหัสสินค้าเพื่อดูรายละเอียดสต๊อก</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ================= PAGE 2: STOCK LOG ================= -->
+    <div id="page-stocklog" class="tab-page space-y-4">
+      <div class="glass-card p-5 rounded-3xl space-y-4">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+          <h3 class="font-bold text-base dark:text-white text-slate-800">ประวัติบันทึกการลงสต๊อกสินค้าทั้งหมด</h3>
+          <input type="text" id="logSearchInput" onkeyup="filterLogs()" placeholder="🔍 ค้นหารหัส, ผู้บันทึก, หมายเหตุ..." class="glass-input w-full md:w-64 text-xs rounded-xl px-3 py-2 outline-none">
+        </div>
+        <div class="overflow-x-auto rounded-2xl border dark:border-white/5 border-slate-200">
+          <table class="w-full text-left text-xs">
+            <thead class="dark:bg-slate-900/80 bg-slate-100 text-slate-400 border-b border-white/10">
+              <tr>
+                <th class="py-3 px-4">วันที่-เวลา</th>
+                <th class="py-3 px-4 text-center">ประเภท</th>
+                <th class="py-3 px-4 text-center">รหัสสินค้า</th>
+                <th class="py-3 px-4">หมายเหตุ</th>
+                <th class="py-3 px-4 text-right">จำนวน</th>
+                <th class="py-3 px-4 text-center">ผู้บันทึก</th>
+              </tr>
+            </thead>
+            <tbody id="log-table-body" class="divide-y dark:divide-white/5 divide-slate-200"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= PAGE 3: PRODUCTS MASTER ================= -->
+    <div id="page-products" class="tab-page space-y-4">
+      <div class="glass-card p-5 rounded-3xl space-y-4">
+        <div class="flex justify-between items-center">
+          <h3 class="font-bold text-base dark:text-white text-slate-800">รายการสินค้าทั้งหมดในระบบ</h3>
+          <button onclick="openAddModal()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-lg transition">
+            + เพิ่มสินค้าใหม่
+          </button>
+        </div>
+        <div class="overflow-x-auto rounded-2xl border dark:border-white/5 border-slate-200">
+          <table class="w-full text-left text-xs">
+            <thead class="dark:bg-slate-900/80 bg-slate-100 text-slate-400 border-b border-white/10">
+              <tr>
+                <th class="py-3 px-4 text-center">รหัส SKU</th>
+                <th class="py-3 px-4">ชื่อรุ่น / รายละเอียด</th>
+                <th class="py-3 px-4 text-center">หมวดหมู่</th>
+                <th class="py-3 px-4 text-right">ราคาต้นทุน</th>
+                <th class="py-3 px-4 text-center">รับเข้า</th>
+                <th class="py-3 px-4 text-center">จ่ายออก</th>
+                <th class="py-3 px-4 text-center">คงเหลือ</th>
+                <th class="py-3 px-4 text-center">สถานะ</th>
+              </tr>
+            </thead>
+            <tbody id="product-table-body" class="divide-y dark:divide-white/5 divide-slate-200"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= PAGE 4: REPORTS & SETTINGS ================= -->
+    <div id="page-reports" class="tab-page space-y-4">
+      <div class="glass-card p-6 rounded-3xl space-y-4 max-w-xl mx-auto">
+        <h3 class="font-bold text-base dark:text-white text-slate-800 flex items-center gap-2">
+          <i class="fa-brands fa-line text-emerald-500 text-xl"></i> ทดสอบระบบแจ้งเตือน LINE
+        </h3>
+        <p class="text-xs text-slate-400 leading-relaxed">
+          กดปุ่มด้านล่างเพื่อทดสอบส่งสัญญาณแจ้งเตือนระบบเข้า LINE Notify (ต้องระบุ Token ในไฟล์ Code.gs)
+        </p>
+        <button onclick="triggerLineTest()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-2xl text-xs shadow-lg transition">
+          ส่งข้อความทดสอบเข้า LINE
+        </button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL 1: RECEIVE / DISPENSE FORM -->
+  <div id="formModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="glass-card rounded-3xl max-w-md w-full p-6 space-y-4 border border-white/10 shadow-2xl">
+      <div class="flex justify-between items-center border-b border-white/10 pb-3">
+        <h3 id="modalTitle" class="font-bold text-base dark:text-white text-slate-800">บันทึกรายการสต๊อก</h3>
+        <button onclick="closeForm()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <form id="txForm" onsubmit="submitForm(event)" class="space-y-4">
+        <input type="hidden" id="txType">
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">เลือกรหัสสินค้า (SKU)</label>
+          <select id="txSku" required class="glass-input w-full rounded-xl px-3 py-2 text-xs outline-none"></select>
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">จำนวน (ชิ้น)</label>
+          <input type="number" id="txQty" min="1" value="1" required class="glass-input w-full rounded-xl px-3 py-2 text-xs outline-none">
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">หมายเหตุ / ช่องทางขาย</label>
+          <input type="text" id="txNote" placeholder="ขายหน้าร้าน / Shopee / เติมสินค้า" class="glass-input w-full rounded-xl px-3 py-2 text-xs outline-none">
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">ผู้บันทึก</label>
+          <input type="text" id="txUser" value="Admin" required class="glass-input w-full rounded-xl px-3 py-2 text-xs outline-none">
+        </div>
+        <div class="pt-2 flex justify-end space-x-3">
+          <button type="button" onclick="closeForm()" class="px-4 py-2 rounded-xl bg-slate-500/20 text-slate-400 text-xs">ยกเลิก</button>
+          <button type="submit" id="btnSubmit" class="px-5 py-2 rounded-xl bg-blue-600 text-white font-semibold text-xs shadow-lg">บันทึกรายการ</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 2: ADD NEW PRODUCT FORM -->
+  <div id="addProductModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="glass-card rounded-3xl max-w-md w-full p-6 space-y-4 border border-white/10 shadow-2xl">
+      <div class="flex justify-between items-center border-b border-white/10 pb-3">
+        <h3 class="font-bold text-base dark:text-white text-slate-800">+ เพิ่มสินค้าใหม่ลงระบบ</h3>
+        <button onclick="closeAddModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <form onsubmit="submitNewProduct(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">รหัสสินค้า (SKU)</label>
+          <input type="text" id="newSku" placeholder="TR-003" required class="glass-input w-full rounded-xl px-3 py-2 text-xs outline-none">
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">ชื่อสินค้า / รุ่น</label>
+          <input type="text" id="newName" placeholder="รถแข่งบังคับ Turbo Fast" required class="glass-input w-full rounded-xl px-3 py-2 text-xs outline-none">
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">หมวดหมู่</label>
+          <input type="text" id="newCategory" placeholder="รถบังคับ / อะไหล่" required class="glass-input w-full rounded-xl px-3 py-2 text-xs outline-none">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">ราคาต้นทุน (บาท)</label>
+            <input type="number" id="newPrice" min="0" value="100" required class="glass-input w-full rounded-xl px-3 py-2 text-xs outline-none">
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">เตือนเมื่อต่ำกว่า</label>
+            <input type="number" id="newMin" min="1" value="5" required class="glass-input w-full rounded-xl px-3 py-2 text-xs outline-none">
+          </div>
+        </div>
+        <div class="pt-2 flex justify-end space-x-3">
+          <button type="button" onclick="closeAddModal()" class="px-4 py-2 rounded-xl bg-slate-500/20 text-slate-400 text-xs">ยกเลิก</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-emerald-600 text-white font-semibold text-xs shadow-lg">เพิ่มสินค้า</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwXMthVTGjMJs8S0P7-HJd6V6IZEb5jf3pG4echWuFXjCPxmiiiFwRGcX0SkZSXQu7Ddw/exec"; // ระบุ URL Web App กรณีเปิดผ่าน VS Code (ถ้าอยู่ใน GAS ให้เว้นว่าง)
+
+    let globalItems = [];
+    let globalLogs = [];
+    let ratioChartObj = null;
+    let monthlyInChartObj = null;
+    let monthlyOutChartObj = null;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      loadData();
+    });
+
+    // Theme Switcher Logic
+    function toggleTheme() {
+      const html = document.documentElement;
+      const themeText = document.getElementById('theme-text');
+      if (html.classList.contains('dark')) {
+        html.classList.remove('dark');
+        html.classList.add('light');
+        if(themeText) themeText.innerText = 'โหมดมืด';
+      } else {
+        html.classList.remove('light');
+        html.classList.add('dark');
+        if(themeText) themeText.innerText = 'โหมดสว่าง';
+      }
+      renderRatioChart({ totalIn: document.getElementById('kpi-in').innerText, totalOut: document.getElementById('kpi-out').innerText, totalRemaining: document.getElementById('kpi-remaining').innerText });
+    }
+
+    // Backend Bridge Executer
+    function callBackend(actionName, payloadData, callback) {
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        if (actionName === 'getDashboard') google.script.run.withSuccessHandler(callback).getDashboardData();
+        else if (actionName === 'saveTx') google.script.run.withSuccessHandler(callback).saveTransaction(payloadData);
+        else if (actionName === 'addProduct') google.script.run.withSuccessHandler(callback).addNewProduct(payloadData);
+        else if (actionName === 'testLine') google.script.run.withSuccessHandler(callback).testLineAlert();
+      } else if (GAS_WEB_APP_URL) {
+        fetch(GAS_WEB_APP_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ action: actionName, payload: payloadData })
+        })
+        .then(res => res.json())
+        .then(data => callback(data));
+      } else {
+        alert("กรุณาระบุ GAS_WEB_APP_URL หากรันผ่าน Local / VS Code!");
+      }
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-page').forEach(el => el.classList.remove('active'));
+      document.getElementById('page-' + tabId).classList.add('active');
+      document.querySelectorAll('.nav-btn').forEach(btn => btn.className = 'nav-btn px-3.5 py-2 rounded-xl dark:text-slate-400 text-slate-600 hover:text-blue-500 transition whitespace-nowrap');
+      document.getElementById('nav-' + tabId).className = 'nav-btn px-3.5 py-2 rounded-xl font-semibold transition bg-blue-600 text-white shadow-lg shadow-blue-600/30 whitespace-nowrap';
+    }
+
+    function loadData() {
+      const icon = document.getElementById('refresh-icon');
+      const mobIcon = document.getElementById('refresh-icon-mob');
+      if(icon) icon.classList.add('fa-spin');
+      if(mobIcon) mobIcon.classList.add('fa-spin');
+
+      callBackend('getDashboard', null, data => {
+        if(icon) icon.classList.remove('fa-spin');
+        if(mobIcon) mobIcon.classList.remove('fa-spin');
+
+        globalItems = data.items;
+        globalLogs = data.allLogs;
+
+        renderKPI(data.kpi);
+        renderDashSummaryTable(data.items);
+        renderDashRecentTable(data.allLogs.slice(0, 7));
+        renderLowStockSidebar(data.lowStockList);
+        renderRatioChart(data.kpi);
+        renderMonthlyCharts(data.monthlyChart);
+        renderTopSelling(data.items);
+        renderProductMasterTable(data.items);
+        renderLogTable(data.allLogs);
+        populateSelects(data.items);
+      });
+    }
+
+    function renderKPI(kpi) {
+      document.getElementById('kpi-in').innerText = Number(kpi.totalIn).toLocaleString();
+      document.getElementById('kpi-out').innerText = Number(kpi.totalOut).toLocaleString();
+      document.getElementById('kpi-remaining').innerText = Number(kpi.totalRemaining).toLocaleString();
+      document.getElementById('kpi-items').innerText = Number(kpi.totalItems).toLocaleString();
+      document.getElementById('kpi-value').innerText = '฿' + Number(kpi.totalValue).toLocaleString();
+      document.getElementById('kpi-low-text').innerText = `วิกฤต/ใกล้หมด ${kpi.lowStockCount} รายการ`;
+    }
+
+    function renderDashSummaryTable(items) {
+      const tbody = document.getElementById('dash-summary-tbody');
+      tbody.innerHTML = '';
+      items.forEach((item, index) => {
+        let badge = item.status === 'ปกติ' 
+          ? '<span class="bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded text-[10px]">ปกติ</span>'
+          : '<span class="bg-rose-500/10 text-rose-500 px-2 py-0.5 rounded text-[10px]">ใกล้หมด</span>';
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-white/5';
+        tr.innerHTML = `
+          <td class="py-2 px-3 text-slate-400">${index + 1}</td>
+          <td class="py-2 px-3 font-bold text-blue-500">${item.sku}</td>
+          <td class="py-2 px-3 dark:text-slate-200 text-slate-700">${item.name}</td>
+          <td class="py-2 px-3 text-center text-emerald-500">${item.inQty}</td>
+          <td class="py-2 px-3 text-center text-rose-500">${item.outQty}</td>
+          <td class="py-2 px-3 text-center font-bold">${item.remaining}</td>
+          <td class="py-2 px-3 text-center">${badge}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderDashRecentTable(logs) {
+      const tbody = document.getElementById('dash-recent-tbody');
+      tbody.innerHTML = '';
+      logs.forEach(log => {
+        const badge = log.type === 'รับเข้า' 
+          ? '<span class="text-emerald-500 font-semibold">รับเข้า</span>' 
+          : '<span class="text-rose-500 font-semibold">จ่ายออก</span>';
+        
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-white/5';
+        tr.innerHTML = `
+          <td class="py-2 px-3 text-slate-400">${log.date}</td>
+          <td class="py-2 px-3 text-center">${badge}</td>
+          <td class="py-2 px-3 font-bold text-blue-500">${log.sku}</td>
+          <td class="py-2 px-3 text-slate-400">${log.note}</td>
+          <td class="py-2 px-3 text-right font-bold">${log.qty}</td>
+          <td class="py-2 px-3 text-center text-slate-400">${log.user}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderLowStockSidebar(list) {
+      const box = document.getElementById('low-stock-sidebar');
+      box.innerHTML = '';
+      if(list.length === 0) {
+        box.innerHTML = '<p class="text-emerald-500 text-[11px]">✅ สต๊อกปลอดภัยทุกรายการ</p>';
+        return;
+      }
+      list.forEach(i => {
+        box.innerHTML += `
+          <div class="flex justify-between items-center dark:bg-slate-900/40 bg-white p-2 rounded-xl border border-rose-500/20">
+            <span class="font-bold text-rose-500">${i.sku}</span>
+            <span class="truncate max-w-[90px] text-slate-400">${i.name}</span>
+            <span class="text-rose-500 font-bold">${i.remaining} ชิ้น</span>
+          </div>
+        `;
+      });
+    }
+
+    function renderRatioChart(kpi) {
+      const ctx = document.getElementById('ratioChart').getContext('2d');
+      if(ratioChartObj) ratioChartObj.destroy();
+      const isDark = document.documentElement.classList.contains('dark');
+
+      ratioChartObj = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['รับเข้า', 'จ่ายออก', 'คงเหลือ'],
+          datasets: [{
+            data: [kpi.totalIn, kpi.totalOut, kpi.totalRemaining],
+            backgroundColor: ['#10B981', '#EF4444', '#F59E0B'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: 'bottom', labels: { color: isDark ? '#94A3B8' : '#475569', font: { family: 'Prompt', size: 10 } } } }
+        }
+      });
+    }
+
+    function renderMonthlyCharts(data) {
+      const months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+      
+      // Monthly In Chart
+      const ctxIn = document.getElementById('monthlyInChart').getContext('2d');
+      if(monthlyInChartObj) monthlyInChartObj.destroy();
+      monthlyInChartObj = new Chart(ctxIn, {
+        type: 'bar',
+        data: {
+          labels: months,
+          datasets: [{ label: 'รับเข้า', data: data.in, backgroundColor: '#10B981', borderRadius: 4 }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
+      });
+
+      // Monthly Out Chart
+      const ctxOut = document.getElementById('monthlyOutChart').getContext('2d');
+      if(monthlyOutChartObj) monthlyOutChartObj.destroy();
+      monthlyOutChartObj = new Chart(ctxOut, {
+        type: 'bar',
+        data: {
+          labels: months,
+          datasets: [{ label: 'จ่ายออก', data: data.out, backgroundColor: '#EF4444', borderRadius: 4 }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
+      });
+    }
+
+    function renderTopSelling(items) {
+      const sorted = [...items].sort((a,b) => b.outQty - a.outQty).slice(0, 5);
+      const box = document.getElementById('top-selling-list');
+      box.innerHTML = '';
+      sorted.forEach((item, idx) => {
+        box.innerHTML += `
+          <div class="space-y-1">
+            <div class="flex justify-between text-[11px]">
+              <span>${idx+1}. ${item.sku}</span>
+              <span class="text-rose-500 font-bold">${item.outQty} ชิ้น</span>
+            </div>
+            <div class="w-full dark:bg-slate-800 bg-slate-200 rounded-full h-1.5">
+              <div class="bg-rose-500 h-1.5 rounded-full" style="width: ${Math.min(item.outQty * 10, 100)}%"></div>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function populateSelects(items) {
+      const txSelect = document.getElementById('txSku');
+      const searchSelect = document.getElementById('quickSearchSelect');
+      txSelect.innerHTML = '';
+      searchSelect.innerHTML = '<option value="">-- เลือกรหัสสินค้าเพื่อค้นหา --</option>';
+
+      items.forEach(i => {
+        txSelect.innerHTML += `<option value="${i.sku}">[${i.sku}] ${i.name}</option>`;
+        searchSelect.innerHTML += `<option value="${i.sku}">${i.sku} - ${i.name}</option>`;
+      });
+    }
+
+    function showQuickSearchDetail(sku) {
+      const item = globalItems.find(i => i.sku === sku);
+      const box = document.getElementById('quickSearchBox');
+      if(!item) {
+        box.innerHTML = '<p class="text-slate-400">เลือกรหัสสินค้าเพื่อดูรายละเอียดสต๊อก</p>';
+        return;
+      }
+      box.innerHTML = `
+        <div class="font-bold text-blue-500 text-sm">${item.name} (${item.sku})</div>
+        <div class="flex justify-between"><span>รับเข้า:</span> <b class="text-emerald-500">${item.inQty}</b></div>
+        <div class="flex justify-between"><span>จ่ายออก:</span> <b class="text-rose-500">${item.outQty}</b></div>
+        <div class="flex justify-between"><span>คงเหลือ:</span> <b class="text-amber-500">${item.remaining}</b></div>
+      `;
+    }
+
+    function renderProductMasterTable(items) {
+      const tbody = document.getElementById('product-table-body');
+      tbody.innerHTML = '';
+      items.forEach(item => {
+        tbody.innerHTML += `
+          <tr class="hover:bg-white/5">
+            <td class="py-2.5 px-4 font-bold text-blue-500 text-center">${item.sku}</td>
+            <td class="py-2.5 px-4">${item.name}</td>
+            <td class="py-2.5 px-4 text-center text-slate-400">${item.category}</td>
+            <td class="py-2.5 px-4 text-right">฿${item.price.toLocaleString()}</td>
+            <td class="py-2.5 px-4 text-center text-emerald-500 font-semibold">${item.inQty}</td>
+            <td class="py-2.5 px-4 text-center text-rose-500 font-semibold">${item.outQty}</td>
+            <td class="py-2.5 px-4 text-center font-bold">${item.remaining}</td>
+            <td class="py-2.5 px-4 text-center"><span class="bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded text-[10px]">${item.status}</span></td>
+          </tr>
+        `;
+      });
+    }
+
+    function renderLogTable(logs) {
+      const tbody = document.getElementById('log-table-body');
+      tbody.innerHTML = '';
+      logs.forEach(log => {
+        tbody.innerHTML += `
+          <tr class="hover:bg-white/5">
+            <td class="py-2.5 px-4 text-slate-400">${log.date}</td>
+            <td class="py-2.5 px-4 text-center">${log.type}</td>
+            <td class="py-2.5 px-4 text-center font-bold text-blue-500">${log.sku}</td>
+            <td class="py-2.5 px-4 text-slate-400">${log.note}</td>
+            <td class="py-2.5 px-4 text-right font-bold">${log.qty}</td>
+            <td class="py-2.5 px-4 text-center text-slate-400">${log.user}</td>
+          </tr>
+        `;
+      });
+    }
+
+    function filterLogs() {
+      const query = document.getElementById('logSearchInput').value.toLowerCase();
+      const filtered = globalLogs.filter(l => 
+        l.sku.toLowerCase().includes(query) || 
+        l.user.toLowerCase().includes(query) || 
+        l.note.toLowerCase().includes(query)
+      );
+      renderLogTable(filtered);
+    }
+
+    // Modal Control Functions
+    function openForm(type) {
+      document.getElementById('txType').value = type;
+      document.getElementById('modalTitle').innerText = type === 'รับเข้า' ? '📥 บันทึกรับสินค้าเข้า (+)' : '📤 บันทึกจ่ายสินค้าออก (-)';
+      document.getElementById('formModal').classList.remove('hidden');
+    }
+    function closeForm() { document.getElementById('formModal').classList.add('hidden'); }
+
+    function openAddModal() { document.getElementById('addProductModal').classList.remove('hidden'); }
+    function closeAddModal() { document.getElementById('addProductModal').classList.add('hidden'); }
+
+    function submitForm(e) {
+      e.preventDefault();
+      const payload = {
+        type: document.getElementById('txType').value,
+        sku: document.getElementById('txSku').value,
+        qty: document.getElementById('txQty').value,
+        note: document.getElementById('txNote').value,
+        user: document.getElementById('txUser').value
+      };
+      callBackend('saveTx', payload, () => {
+        closeForm();
+        loadData();
+      });
+    }
+
+    function submitNewProduct(e) {
+      e.preventDefault();
+      const payload = {
+        sku: document.getElementById('newSku').value,
+        name: document.getElementById('newName').value,
+        category: document.getElementById('newCategory').value,
+        price: document.getElementById('newPrice').value,
+        minStock: document.getElementById('newMin').value
+      };
+      callBackend('addProduct', payload, () => {
+        closeAddModal();
+        loadData();
+      });
+    }
+
+    function triggerLineTest() {
+      callBackend('testLine', null, () => alert("ส่งสัญญาณทดสอบเรียบร้อยแล้ว!"));
+    }
+  </script>
+</body>
+</html>
