@@ -224,10 +224,10 @@
         <!-- LEFT 3 COLUMNS -->
         <div class="lg:col-span-3 space-y-5">
           
-          <!-- SUMMARY TABLE -->
+          <!-- SUMMARY TABLE (CATEGORIZED) -->
           <div class="glass-card p-4 rounded-3xl space-y-3">
             <h3 class="font-bold text-sm dark:text-slate-200 text-slate-700 flex items-center gap-2">
-              <i class="fa-solid fa-list text-blue-500"></i> สรุปสต๊อกคงเหลือแยกรายการ
+              <i class="fa-solid fa-boxes-stacked text-blue-500"></i> สรุปสต๊อกคงเหลือแยกตามหมวดหมู่
             </h3>
             <div class="overflow-x-auto">
               <table class="w-full text-left text-xs">
@@ -444,7 +444,7 @@
         </div>
         <div>
           <label class="block text-xs text-slate-400 mb-1">หมวดหมู่</label>
-          <input type="text" id="newCategory" placeholder="รถบังคับ / อะไหล่" required class="glass-input w-full rounded-xl px-3 py-2 text-xs outline-none">
+          <input type="text" id="newCategory" placeholder="ชาม / สายพาน / อะไหล่แต่ง" required class="glass-input w-full rounded-xl px-3 py-2 text-xs outline-none">
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
@@ -466,7 +466,7 @@
 
   <!-- JAVASCRIPT LOGIC -->
   <script>
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwXMthVTGjMJs8S0P7-HJd6V6IZEb5jf3pG4echWuFXjCPxmiiiFwRGcX0SkZSXQu7Ddw/exec"; // ระบุ URL Web App กรณีเปิดผ่าน VS Code (ถ้าอยู่ใน GAS ให้เว้นว่าง)
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwXMthVTGjMJs8S0P7-HJd6V6IZEb5jf3pG4echWuFXjCPxmiiiFwRGcX0SkZSXQu7Ddw/exec"; // ระบุ URL Web App กรณีเปิดผ่าน Local / VS Code
 
     let globalItems = [];
     let globalLogs = [];
@@ -491,7 +491,11 @@
         html.classList.add('dark');
         if(themeText) themeText.innerText = 'โหมดสว่าง';
       }
-      renderRatioChart({ totalIn: document.getElementById('kpi-in').innerText, totalOut: document.getElementById('kpi-out').innerText, totalRemaining: document.getElementById('kpi-remaining').innerText });
+      renderRatioChart({ 
+        totalIn: document.getElementById('kpi-in').innerText.replace(/,/g, ''), 
+        totalOut: document.getElementById('kpi-out').innerText.replace(/,/g, ''), 
+        totalRemaining: document.getElementById('kpi-remaining').innerText.replace(/,/g, '') 
+      });
     }
 
     // Backend Bridge Executer
@@ -508,7 +512,11 @@
           body: JSON.stringify({ action: actionName, payload: payloadData })
         })
         .then(res => res.json())
-        .then(data => callback(data));
+        .then(data => callback(data))
+        .catch(err => {
+          console.error("Error connecting backend:", err);
+          alert("ไม่สามารถเชื่อมต่อระบบได้ กรุณาตรวจสอบการตั้งค่า GAS_WEB_APP_URL");
+        });
       } else {
         alert("กรุณาระบุ GAS_WEB_APP_URL หากรันผ่าน Local / VS Code!");
       }
@@ -531,51 +539,82 @@
         if(icon) icon.classList.remove('fa-spin');
         if(mobIcon) mobIcon.classList.remove('fa-spin');
 
-        globalItems = data.items;
-        globalLogs = data.allLogs;
+        if (!data) return;
 
-        renderKPI(data.kpi);
-        renderDashSummaryTable(data.items);
-        renderDashRecentTable(data.allLogs.slice(0, 7));
-        renderLowStockSidebar(data.lowStockList);
-        renderRatioChart(data.kpi);
-        renderMonthlyCharts(data.monthlyChart);
-        renderTopSelling(data.items);
-        renderProductMasterTable(data.items);
-        renderLogTable(data.allLogs);
-        populateSelects(data.items);
+        globalItems = data.items || [];
+        globalLogs = data.allLogs || [];
+
+        renderKPI(data.kpi || {});
+        renderDashSummaryTable(globalItems);
+        renderDashRecentTable(globalLogs.slice(0, 7));
+        renderLowStockSidebar(data.lowStockList || []);
+        renderRatioChart(data.kpi || {});
+        if(data.monthlyChart) renderMonthlyCharts(data.monthlyChart);
+        renderTopSelling(globalItems);
+        renderProductMasterTable(globalItems);
+        renderLogTable(globalLogs);
+        populateSelects(globalItems);
       });
     }
 
     function renderKPI(kpi) {
-      document.getElementById('kpi-in').innerText = Number(kpi.totalIn).toLocaleString();
-      document.getElementById('kpi-out').innerText = Number(kpi.totalOut).toLocaleString();
-      document.getElementById('kpi-remaining').innerText = Number(kpi.totalRemaining).toLocaleString();
-      document.getElementById('kpi-items').innerText = Number(kpi.totalItems).toLocaleString();
-      document.getElementById('kpi-value').innerText = '฿' + Number(kpi.totalValue).toLocaleString();
-      document.getElementById('kpi-low-text').innerText = `วิกฤต/ใกล้หมด ${kpi.lowStockCount} รายการ`;
+      document.getElementById('kpi-in').innerText = Number(kpi.totalIn || 0).toLocaleString();
+      document.getElementById('kpi-out').innerText = Number(kpi.totalOut || 0).toLocaleString();
+      document.getElementById('kpi-remaining').innerText = Number(kpi.totalRemaining || 0).toLocaleString();
+      document.getElementById('kpi-items').innerText = Number(kpi.totalItems || 0).toLocaleString();
+      document.getElementById('kpi-value').innerText = '฿' + Number(kpi.totalValue || 0).toLocaleString();
+      document.getElementById('kpi-low-text').innerText = `วิกฤต/ใกล้หมด ${kpi.lowStockCount || 0} รายการ`;
     }
 
+    /* สรุปสต๊อกคงเหลือแบบจัดกลุ่มตามหมวดหมู่ */
     function renderDashSummaryTable(items) {
       const tbody = document.getElementById('dash-summary-tbody');
       tbody.innerHTML = '';
-      items.forEach((item, index) => {
-        let badge = item.status === 'ปกติ' 
-          ? '<span class="bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded text-[10px]">ปกติ</span>'
-          : '<span class="bg-rose-500/10 text-rose-500 px-2 py-0.5 rounded text-[10px]">ใกล้หมด</span>';
 
-        const tr = document.createElement('tr');
-        tr.className = 'hover:bg-white/5';
-        tr.innerHTML = `
-          <td class="py-2 px-3 text-slate-400">${index + 1}</td>
-          <td class="py-2 px-3 font-bold text-blue-500">${item.sku}</td>
-          <td class="py-2 px-3 dark:text-slate-200 text-slate-700">${item.name}</td>
-          <td class="py-2 px-3 text-center text-emerald-500">${item.inQty}</td>
-          <td class="py-2 px-3 text-center text-rose-500">${item.outQty}</td>
-          <td class="py-2 px-3 text-center font-bold">${item.remaining}</td>
-          <td class="py-2 px-3 text-center">${badge}</td>
+      if (!items || items.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="py-4 text-center text-slate-400">ไม่พบข้อมูลสินค้า</td></tr>';
+        return;
+      }
+
+      // 1. จัดกลุ่มสินค้าตามหมวดหมู่ (category)
+      const grouped = items.reduce((acc, item) => {
+        const cat = item.category || 'ทั่วไป / ไม่ระบุ';
+        if (!acc[cat]) acc[cat] = [];
+        acc[cat].push(item);
+        return acc;
+      }, {});
+
+      // 2. แสดงผลแยกตามหมวดหมู่
+      Object.keys(grouped).forEach(categoryName => {
+        // แถวหัวข้อหมวดหมู่
+        const headerTr = document.createElement('tr');
+        headerTr.className = 'bg-blue-600/20 text-blue-400 font-bold';
+        headerTr.innerHTML = `
+          <td colspan="7" class="py-2.5 px-3 text-xs border-y border-blue-500/20">
+            📦 หมวดหมู่: ${categoryName} (${grouped[categoryName].length} รายการ)
+          </td>
         `;
-        tbody.appendChild(tr);
+        tbody.appendChild(headerTr);
+
+        // แสดงรายการสินค้าในหมวดหมู่นั้นๆ
+        grouped[categoryName].forEach((item, index) => {
+          let badge = item.status === 'ปกติ' 
+            ? '<span class="bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded text-[10px]">ปกติ</span>'
+            : '<span class="bg-rose-500/10 text-rose-500 px-2 py-0.5 rounded text-[10px]">ใกล้หมด</span>';
+
+          const tr = document.createElement('tr');
+          tr.className = 'hover:bg-white/5 transition';
+          tr.innerHTML = `
+            <td class="py-2 px-3 text-slate-400 pl-6">${index + 1}</td>
+            <td class="py-2 px-3 font-bold text-blue-500">${item.sku}</td>
+            <td class="py-2 px-3 dark:text-slate-200 text-slate-700">${item.name}</td>
+            <td class="py-2 px-3 text-center text-emerald-500">${item.inQty}</td>
+            <td class="py-2 px-3 text-center text-rose-500">${item.outQty}</td>
+            <td class="py-2 px-3 text-center font-bold">${item.remaining}</td>
+            <td class="py-2 px-3 text-center">${badge}</td>
+          `;
+          tbody.appendChild(tr);
+        });
       });
     }
 
@@ -629,7 +668,7 @@
         data: {
           labels: ['รับเข้า', 'จ่ายออก', 'คงเหลือ'],
           datasets: [{
-            data: [kpi.totalIn, kpi.totalOut, kpi.totalRemaining],
+            data: [kpi.totalIn || 0, kpi.totalOut || 0, kpi.totalRemaining || 0],
             backgroundColor: ['#10B981', '#EF4444', '#F59E0B'],
             borderWidth: 0
           }]
@@ -651,7 +690,7 @@
         type: 'bar',
         data: {
           labels: months,
-          datasets: [{ label: 'รับเข้า', data: data.in, backgroundColor: '#10B981', borderRadius: 4 }]
+          datasets: [{ label: 'รับเข้า', data: data.in || [], backgroundColor: '#10B981', borderRadius: 4 }]
         },
         options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
       });
@@ -663,25 +702,25 @@
         type: 'bar',
         data: {
           labels: months,
-          datasets: [{ label: 'จ่ายออก', data: data.out, backgroundColor: '#EF4444', borderRadius: 4 }]
+          datasets: [{ label: 'จ่ายออก', data: data.out || [], backgroundColor: '#EF4444', borderRadius: 4 }]
         },
         options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
       });
     }
 
     function renderTopSelling(items) {
-      const sorted = [...items].sort((a,b) => b.outQty - a.outQty).slice(0, 5);
+      const sorted = [...items].sort((a,b) => (b.outQty || 0) - (a.outQty || 0)).slice(0, 5);
       const box = document.getElementById('top-selling-list');
       box.innerHTML = '';
       sorted.forEach((item, idx) => {
         box.innerHTML += `
           <div class="space-y-1">
             <div class="flex justify-between text-[11px]">
-              <span>${idx+1}. ${item.sku}</span>
+              <span>${idx+1}. ${item.sku} - ${item.name}</span>
               <span class="text-rose-500 font-bold">${item.outQty} ชิ้น</span>
             </div>
             <div class="w-full dark:bg-slate-800 bg-slate-200 rounded-full h-1.5">
-              <div class="bg-rose-500 h-1.5 rounded-full" style="width: ${Math.min(item.outQty * 10, 100)}%"></div>
+              <div class="bg-rose-500 h-1.5 rounded-full" style="width: ${Math.min((item.outQty || 0) * 10, 100)}%"></div>
             </div>
           </div>
         `;
@@ -709,6 +748,7 @@
       }
       box.innerHTML = `
         <div class="font-bold text-blue-500 text-sm">${item.name} (${item.sku})</div>
+        <div class="text-slate-400">หมวดหมู่: <b class="text-slate-200">${item.category || 'ทั่วไป'}</b></div>
         <div class="flex justify-between"><span>รับเข้า:</span> <b class="text-emerald-500">${item.inQty}</b></div>
         <div class="flex justify-between"><span>จ่ายออก:</span> <b class="text-rose-500">${item.outQty}</b></div>
         <div class="flex justify-between"><span>คงเหลือ:</span> <b class="text-amber-500">${item.remaining}</b></div>
@@ -723,8 +763,8 @@
           <tr class="hover:bg-white/5">
             <td class="py-2.5 px-4 font-bold text-blue-500 text-center">${item.sku}</td>
             <td class="py-2.5 px-4">${item.name}</td>
-            <td class="py-2.5 px-4 text-center text-slate-400">${item.category}</td>
-            <td class="py-2.5 px-4 text-right">฿${item.price.toLocaleString()}</td>
+            <td class="py-2.5 px-4 text-center text-slate-400">${item.category || '-'}</td>
+            <td class="py-2.5 px-4 text-right">฿${Number(item.price || 0).toLocaleString()}</td>
             <td class="py-2.5 px-4 text-center text-emerald-500 font-semibold">${item.inQty}</td>
             <td class="py-2.5 px-4 text-center text-rose-500 font-semibold">${item.outQty}</td>
             <td class="py-2.5 px-4 text-center font-bold">${item.remaining}</td>
@@ -754,9 +794,9 @@
     function filterLogs() {
       const query = document.getElementById('logSearchInput').value.toLowerCase();
       const filtered = globalLogs.filter(l => 
-        l.sku.toLowerCase().includes(query) || 
-        l.user.toLowerCase().includes(query) || 
-        l.note.toLowerCase().includes(query)
+        (l.sku && l.sku.toLowerCase().includes(query)) || 
+        (l.user && l.user.toLowerCase().includes(query)) || 
+        (l.note && l.note.toLowerCase().includes(query))
       );
       renderLogTable(filtered);
     }
