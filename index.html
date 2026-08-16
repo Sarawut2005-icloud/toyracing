@@ -3,7 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Toy Racing Pro - Ultra Glassmorphism Dashboard</title>
+  <title>Toy Racing</title>
+
+  <!-- 1. Favicon (ไอคอนบนแท็บเบราว์เซอร์) - เปลี่ยน URL รูปภาพตรง href -->
+  <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/3097/3097180.png">
+
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -29,9 +33,9 @@
     html.dark body {
       background: #080c14;
       background-image: 
-        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.18) 0px, transparent 50%),
+        radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.2) 0px, transparent 50%),
         radial-gradient(at 100% 0%, rgba(239, 68, 68, 0.15) 0px, transparent 50%),
-        radial-gradient(at 50% 100%, rgba(16, 185, 129, 0.12) 0px, transparent 50%);
+        radial-gradient(at 50% 100%, rgba(59, 130, 246, 0.15) 0px, transparent 50%);
       background-attachment: fixed;
       color: #f1f5f9;
     }
@@ -40,14 +44,14 @@
     html.light body {
       background: #f8fafc;
       background-image: 
-        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.12) 0px, transparent 50%),
+        radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.12) 0px, transparent 50%),
         radial-gradient(at 100% 0%, rgba(239, 68, 68, 0.1) 0px, transparent 50%),
-        radial-gradient(at 50% 100%, rgba(16, 185, 129, 0.1) 0px, transparent 50%);
+        radial-gradient(at 50% 100%, rgba(59, 130, 246, 0.1) 0px, transparent 50%);
       background-attachment: fixed;
       color: #0f172a;
     }
 
-    /* Glass Cards Dynamic Styling */
+    /* Glass Cards Styling */
     .glass-card {
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
@@ -108,15 +112,30 @@
   <header class="glass-nav sticky top-0 z-40 px-4 py-3">
     <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-3">
       
-      <!-- LOGO & TITLE -->
+      <!-- LOGO & TITLE (CLICKABLE LOGO UPLOAD) -->
       <div class="flex items-center space-x-3 w-full md:w-auto justify-between md:justify-start">
         <div class="flex items-center space-x-3">
-          <div class="bg-gradient-to-tr from-green-500 to-emerald-700 p-2.5 rounded-2xl text-white shadow-lg shadow-green-500/20">
-            <i class="fa-solid fa-flag-checkered text-xl"></i>
+          
+          <!-- 2. Logo Container (รองรับทั้งรูปเริ่มต้นและกดอัปโหลด) -->
+          <div class="relative group cursor-pointer" onclick="document.getElementById('logoUploadInput').click()" title="คลิกเพื่อเปลี่ยน Logo">
+            <div id="logoWrapper" class="w-12 h-12 bg-gradient-to-tr from-emerald-500 to-green-700 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/20 overflow-hidden border border-white/20">
+              <i id="defaultLogoIcon" class="fa-solid fa-flag-checkered text-xl"></i>
+              <!-- ใส่ URL โลโก้ของคุณในช่อง src ถ้านำไปฝากไฟล์รูปภาพไว้แล้ว -->
+              <img id="appLogoImg" src="" alt="Logo" class="hidden w-full h-full object-cover">
+            </div>
+            <!-- Overlay Icon on Hover -->
+            <div class="absolute inset-0 bg-black/60 rounded-2xl opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs transition">
+              <i class="fa-solid fa-camera"></i>
+            </div>
           </div>
+          <!-- Hidden Input for Logo Upload -->
+          <input type="file" id="logoUploadInput" accept="image/png, image/jpeg, image/webp" class="hidden" onchange="handleLogoUpload(event)">
+
           <div>
-            <h1 class="font-black text-xl tracking-wider dark:text-white text-slate-800">TOY RACING</h1>
-            <p class="text-[11px] dark:text-slate-400 text-slate-500">ระบบบันทึกการลงสต๊อกสินค้า • Realtime Glass UI</p>
+            <h1 class="font-black text-xl tracking-wider dark:text-white text-slate-800 flex items-center gap-2">
+              TOY RACING <span class="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">V1</span>
+            </h1>
+            <p class="text-[11px] dark:text-slate-400 text-slate-500">ระบบบันทึกการลงสต๊อกสินค้า </p>
           </div>
         </div>
 
@@ -172,6 +191,26 @@
 
     <!-- ================= PAGE 1: DASHBOARD ================= -->
     <div id="page-dashboard" class="tab-page active space-y-5">
+
+      <!-- HERO BANNER SECTION (IMAGE ONLY) -->
+      <div class="relative w-full rounded-3xl overflow-hidden glass-card border border-emerald-500/20 shadow-2xl group h-[180px] md:h-[240px] flex items-center">
+        <!-- Banner Image Layer -->
+        <img id="appBannerImg" src="" alt="Banner" class="absolute inset-0 w-full h-full object-cover hidden z-10">
+        
+        <!-- Default Background (แสดงเมื่อยังไม่มีการอัปโหลดรูปภาพ) -->
+        <div id="bannerDefaultBg" class="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-900 to-emerald-950 flex flex-col items-center justify-center text-slate-500">
+          <i class="fa-solid fa-image text-4xl mb-2 opacity-30"></i>
+          <p class="text-xs font-medium opacity-50">ยังไม่ได้อัปโหลดรูป Banner (กดปุ่มมุมขวาเพื่อเปลี่ยนรูป)</p>
+        </div>
+
+        <!-- Dynamic Upload Banner Button -->
+        <button onclick="document.getElementById('bannerUploadInput').click()" 
+          class="absolute bottom-4 right-4 z-20 bg-slate-950/80 hover:bg-emerald-600 text-white border border-white/20 px-3.5 py-2 rounded-2xl text-xs font-semibold backdrop-blur-md transition flex items-center gap-2 shadow-lg opacity-80 group-hover:opacity-100">
+          <i class="fa-solid fa-cloud-arrow-up text-emerald-400 group-hover:text-white"></i>
+          <span>เปลี่ยน Banner PNG</span>
+        </button>
+        <input type="file" id="bannerUploadInput" accept="image/png, image/jpeg, image/webp" class="hidden" onchange="handleBannerUpload(event)">
+      </div>
 
       <!-- QUICK ACTION BUTTONS -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -376,16 +415,32 @@
 
     <!-- ================= PAGE 4: REPORTS & SETTINGS ================= -->
     <div id="page-reports" class="tab-page space-y-4">
-      <div class="glass-card p-6 rounded-3xl space-y-4 max-w-xl mx-auto">
-        <h3 class="font-bold text-base dark:text-white text-slate-800 flex items-center gap-2">
-          <i class="fa-brands fa-line text-emerald-500 text-xl"></i> ทดสอบระบบแจ้งเตือน LINE
-        </h3>
-        <p class="text-xs text-slate-400 leading-relaxed">
-          กดปุ่มด้านล่างเพื่อทดสอบส่งสัญญาณแจ้งเตือนระบบเข้า LINE Notify (ต้องระบุ Token ในไฟล์ Code.gs)
-        </p>
-        <button onclick="triggerLineTest()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-2xl text-xs shadow-lg transition">
-          ส่งข้อความทดสอบเข้า LINE
-        </button>
+      <div class="glass-card p-6 rounded-3xl space-y-5 max-w-xl mx-auto">
+        <div>
+          <h3 class="font-bold text-base dark:text-white text-slate-800 flex items-center gap-2">
+            <i class="fa-brands fa-line text-emerald-500 text-xl"></i> ทดสอบระบบแจ้งเตือน LINE
+          </h3>
+          <p class="text-xs text-slate-400 leading-relaxed mt-1">
+            กดปุ่มด้านล่างเพื่อทดสอบส่งสัญญาณแจ้งเตือนระบบเข้า LINE Notify (ต้องระบุ Token ในไฟล์ Code.gs)
+          </p>
+          <button onclick="triggerLineTest()" class="w-full mt-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-2xl text-xs shadow-lg transition">
+            ส่งข้อความทดสอบเข้า LINE
+          </button>
+        </div>
+
+        <hr class="border-white/10">
+
+        <div>
+          <h3 class="font-bold text-base dark:text-white text-slate-800 flex items-center gap-2">
+            <i class="fa-solid fa-photo-film text-blue-500 text-xl"></i> จัดการรูปภาพแบรนด์ (Logo & Banner)
+          </h3>
+          <p class="text-xs text-slate-400 leading-relaxed mt-1">
+            รีเซ็ต Logo และ Banner กลับเป็นค่าเริ่มต้นของระบบ
+          </p>
+          <button onclick="resetCustomMedia()" class="w-full mt-3 bg-rose-600/20 hover:bg-rose-600 border border-rose-500/30 text-rose-300 hover:text-white font-bold py-2.5 rounded-2xl text-xs transition">
+            รีเซ็ตรูปภาพ Logo และ Banner
+          </button>
+        </div>
       </div>
     </div>
 
@@ -466,7 +521,7 @@
 
   <!-- JAVASCRIPT LOGIC -->
   <script>
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwXMthVTGjMJs8S0P7-HJd6V6IZEb5jf3pG4echWuFXjCPxmiiiFwRGcX0SkZSXQu7Ddw/exec"; // ระบุ URL Web App กรณีเปิดผ่าน Local / VS Code
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwXMthVTGjMJs8S0P7-HJd6V6IZEb5jf3pG4echWuFXjCPxmiiiFwRGcX0SkZSXQu7Ddw/exec"; 
 
     let globalItems = [];
     let globalLogs = [];
@@ -475,10 +530,74 @@
     let monthlyOutChartObj = null;
 
     document.addEventListener("DOMContentLoaded", () => {
+      loadCustomMedia();
       loadData();
     });
 
-    // Helper: คำนวณสถานะสินค้าตามเงื่อนไขจำนวนคงเหลือ
+    // ===== SYSTEM LOGO & BANNER UPLOAD FUNCTIONS =====
+    function loadCustomMedia() {
+      const savedLogo = localStorage.getItem('toy_racing_logo');
+      const logoImg = document.getElementById('appLogoImg');
+      const defaultIcon = document.getElementById('defaultLogoIcon');
+
+      if (savedLogo) {
+        logoImg.src = savedLogo;
+        logoImg.classList.remove('hidden');
+        defaultIcon.classList.add('hidden');
+      } else if (logoImg.getAttribute('src') && logoImg.getAttribute('src').trim() !== "") {
+        logoImg.classList.remove('hidden');
+        defaultIcon.classList.add('hidden');
+      }
+
+      const savedBanner = localStorage.getItem('toy_racing_banner');
+      if (savedBanner) {
+        document.getElementById('appBannerImg').src = savedBanner;
+        document.getElementById('appBannerImg').classList.remove('hidden');
+        document.getElementById('bannerDefaultBg').classList.add('hidden');
+      }
+    }
+
+    function handleLogoUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const base64 = evt.target.result;
+        localStorage.setItem('toy_racing_logo', base64);
+        document.getElementById('appLogoImg').src = base64;
+        document.getElementById('appLogoImg').classList.remove('hidden');
+        document.getElementById('defaultLogoIcon').classList.add('hidden');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function handleBannerUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const base64 = evt.target.result;
+        localStorage.setItem('toy_racing_banner', base64);
+        document.getElementById('appBannerImg').src = base64;
+        document.getElementById('appBannerImg').classList.remove('hidden');
+        document.getElementById('bannerDefaultBg').classList.add('hidden');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function resetCustomMedia() {
+      if (confirm('ต้องการรีเซ็ต Logo และ Banner กลับเป็นค่าเริ่มต้นหรือไม่?')) {
+        localStorage.removeItem('toy_racing_logo');
+        localStorage.removeItem('toy_racing_banner');
+        document.getElementById('appLogoImg').classList.add('hidden');
+        document.getElementById('defaultLogoIcon').classList.remove('hidden');
+        document.getElementById('appBannerImg').classList.add('hidden');
+        document.getElementById('bannerDefaultBg').classList.remove('hidden');
+        alert('รีเซ็ตรูปภาพเรียบร้อย!');
+      }
+    }
+
+    // ===== BADGE HELPER =====
     function getStatusBadge(remaining) {
       const qty = Number(remaining || 0);
       if (qty <= 0) {
@@ -490,7 +609,7 @@
       }
     }
 
-    // Theme Switcher Logic
+    // ===== THEME SWITCHER LOGIC =====
     function toggleTheme() {
       const html = document.documentElement;
       const themeText = document.getElementById('theme-text');
@@ -510,7 +629,7 @@
       });
     }
 
-    // Backend Bridge Executer
+    // ===== BACKEND BRIDGE EXECUTER =====
     function callBackend(actionName, payloadData, callback) {
       if (typeof google !== 'undefined' && google.script && google.script.run) {
         if (actionName === 'getDashboard') google.script.run.withSuccessHandler(callback).getDashboardData();
@@ -578,7 +697,6 @@
       document.getElementById('kpi-low-text').innerText = `วิกฤต/ใกล้หมด ${kpi.lowStockCount || 0} รายการ`;
     }
 
-    /* สรุปสต๊อกคงเหลือแบบจัดกลุ่มตามหมวดหมู่ */
     function renderDashSummaryTable(items) {
       const tbody = document.getElementById('dash-summary-tbody');
       tbody.innerHTML = '';
@@ -588,7 +706,6 @@
         return;
       }
 
-      // 1. จัดกลุ่มสินค้าตามหมวดหมู่ (category)
       const grouped = items.reduce((acc, item) => {
         const cat = item.category || 'ทั่วไป / ไม่ระบุ';
         if (!acc[cat]) acc[cat] = [];
@@ -596,9 +713,7 @@
         return acc;
       }, {});
 
-      // 2. แสดงผลแยกตามหมวดหมู่
       Object.keys(grouped).forEach(categoryName => {
-        // แถวหัวข้อหมวดหมู่
         const headerTr = document.createElement('tr');
         headerTr.className = 'bg-blue-600/20 text-blue-400 font-bold';
         headerTr.innerHTML = `
@@ -608,7 +723,6 @@
         `;
         tbody.appendChild(headerTr);
 
-        // แสดงรายการสินค้าในหมวดหมู่นั้นๆ
         grouped[categoryName].forEach((item, index) => {
           const badge = getStatusBadge(item.remaining);
 
@@ -693,7 +807,6 @@
     function renderMonthlyCharts(data) {
       const months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
       
-      // Monthly In Chart
       const ctxIn = document.getElementById('monthlyInChart').getContext('2d');
       if(monthlyInChartObj) monthlyInChartObj.destroy();
       monthlyInChartObj = new Chart(ctxIn, {
@@ -705,7 +818,6 @@
         options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
       });
 
-      // Monthly Out Chart
       const ctxOut = document.getElementById('monthlyOutChart').getContext('2d');
       if(monthlyOutChartObj) monthlyOutChartObj.destroy();
       monthlyOutChartObj = new Chart(ctxOut, {
@@ -812,7 +924,6 @@
       renderLogTable(filtered);
     }
 
-    // Modal Control Functions
     function openForm(type) {
       document.getElementById('txType').value = type;
       document.getElementById('modalTitle').innerText = type === 'รับเข้า' ? '📥 บันทึกรับสินค้าเข้า (+)' : '📤 บันทึกจ่ายสินค้าออก (-)';
