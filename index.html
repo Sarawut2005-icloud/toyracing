@@ -478,6 +478,18 @@
       loadData();
     });
 
+    // Helper: คำนวณสถานะสินค้าตามเงื่อนไขจำนวนคงเหลือ
+    function getStatusBadge(remaining) {
+      const qty = Number(remaining || 0);
+      if (qty <= 0) {
+        return '<span class="bg-rose-500/10 text-rose-500 px-2 py-0.5 rounded text-[10px] font-bold">สินค้าหมด</span>';
+      } else if (qty >= 1 && qty <= 5) {
+        return '<span class="bg-amber-500/10 text-amber-500 px-2 py-0.5 rounded text-[10px] font-bold">ใกล้หมด</span>';
+      } else {
+        return '<span class="bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded text-[10px] font-bold">ปกติ</span>';
+      }
+    }
+
     // Theme Switcher Logic
     function toggleTheme() {
       const html = document.documentElement;
@@ -598,9 +610,7 @@
 
         // แสดงรายการสินค้าในหมวดหมู่นั้นๆ
         grouped[categoryName].forEach((item, index) => {
-          let badge = item.status === 'ปกติ' 
-            ? '<span class="bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded text-[10px]">ปกติ</span>'
-            : '<span class="bg-rose-500/10 text-rose-500 px-2 py-0.5 rounded text-[10px]">ใกล้หมด</span>';
+          const badge = getStatusBadge(item.remaining);
 
           const tr = document.createElement('tr');
           tr.className = 'hover:bg-white/5 transition';
@@ -759,6 +769,7 @@
       const tbody = document.getElementById('product-table-body');
       tbody.innerHTML = '';
       items.forEach(item => {
+        const badge = getStatusBadge(item.remaining);
         tbody.innerHTML += `
           <tr class="hover:bg-white/5">
             <td class="py-2.5 px-4 font-bold text-blue-500 text-center">${item.sku}</td>
@@ -768,7 +779,7 @@
             <td class="py-2.5 px-4 text-center text-emerald-500 font-semibold">${item.inQty}</td>
             <td class="py-2.5 px-4 text-center text-rose-500 font-semibold">${item.outQty}</td>
             <td class="py-2.5 px-4 text-center font-bold">${item.remaining}</td>
-            <td class="py-2.5 px-4 text-center"><span class="bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded text-[10px]">${item.status}</span></td>
+            <td class="py-2.5 px-4 text-center">${badge}</td>
           </tr>
         `;
       });
